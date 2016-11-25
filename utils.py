@@ -22,6 +22,11 @@ class Dataset():
 		_EOS = b'_EOS'
 		_UNK = b'_UNK'
 
+		self.PAD_ID = 0
+		self.GO_ID = 1
+		self.EOS_ID = 2
+		self.UNK_ID = 3
+
 		self._START_VOCAB = [_PAD, _GO, _EOS, _UNK]
 		self._WORD_SPLIT = re.compile(b'([.,!?"\':;)(])')
 		self._DIGIT_RE = re.compile(br'\d')
@@ -31,6 +36,7 @@ class Dataset():
 	def load_dataset(self):
 		self.load()
 		self.build_vocabularies()
+		self.convert_data_to_ids()
 
 	def gunzip_file(self, gz_path, new_path):
 		print('Unpacking %s to %s' % (gz_path, new_path))
@@ -65,14 +71,14 @@ class Dataset():
 		self.train_path = train_path
 
 	def build_vocabularies(self):
-		en_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.en' % self.en_vocabulary_size)
-		en_data_path = self.train_path + '.en'
+		self.en_vocabulary_path = en_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.en' % self.en_vocabulary_size)
+		self.en_data_path = en_data_path = self.train_path + '.en'
 
 		if not gfile.Exists(en_vocabulary_path):
 			self.build_vocabulary(en_vocabulary_path, en_data_path, self.en_vocabulary_size)
 
-		fr_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.fr' % self.fr_vocabulary_size)
-		fr_data_path = self.train_path + '.fr'
+		self.fr_vocabulary_path = fr_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.fr' % self.fr_vocabulary_size)
+		self.fr_data_path = fr_data_path = self.train_path + '.fr'
 
 		if not gfile.Exists(fr_vocabulary_path):
 			self.build_vocabulary(fr_vocabulary_path, fr_data_path, self.fr_vocabulary_size)
@@ -106,3 +112,45 @@ class Dataset():
 			with gfile.GFile(vocabulary_path, 'wb') as vocab_file:
 				for w in vocab_list:
 					vocab_file.write(w + b'\n')
+
+	def load_vocabulary(self, vocabulary_path):
+		vocab_list = []
+
+		with gfile.GFile(vocabulary_path, 'rb') as f:
+			vocab_list.extend(f.readlines())
+
+		vocab_list = [line.strip() for line in vocab_list]
+		vocab = dict([(x, y) for (y, x) in enumerate(vocab_list)])
+
+		return vocab
+
+	def convert_data_to_ids(self):
+		self.en_train_ids_path = en_train_ids_path = self.train_path + ('.ids%d.en' % self.en_vocabulary_size)
+		
+		if not gfile.Exists(en_train_ids_path):
+			self.data_to_ids(self.en_data_path, en_train_ids_path, self.en_vocabulary_path)
+
+		self.fr_train_ids_path = fr_train_ids_path = self.train_path + ('.ids%d.fr' % self.fr_vocabulary_size)
+
+		if not gfile.Exists(fr_train_ids_path):
+			self.data_to_ids(self.fr_data_path, fr_train_ids_path, self.fr_vocabulary_path)
+
+	def sentence_to_ids(self, line, vocab):
+		tokens = self.basic_tokenizer(line)
+
+		return [vocab.get(self._DIGIT_RE.sub(b'0', w), self.UNK_ID) for w in tokens]
+
+	def data_to_ids(self, data_path, target_path, vocabulary_path):
+		vocab = self.load_vocabulary(vocabulary_path)
+		print('Converting data %s into ids in %s' % (data_path, target_path))	
+		with gfile.GFile(data_path, 'rb') as data_file:
+			with gfile.GFile(target_path, 'w') as f:
+				counter = 0
+				for line in data_file:
+					counter += 1
+					if not counter % 100000:
+						print(' Processing line %d' % counter)
+
+					word_ids = self.sentence_to_ids(line, vocab)	
+
+					f.write(" ".join([str(word_id) for word_id in word_ids]) + '\n')
