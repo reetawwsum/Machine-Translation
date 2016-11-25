@@ -30,9 +30,7 @@ class Dataset():
 
 	def load_dataset(self):
 		self.load()
-
-		self.build_vocabulary(os.path.join(self.dataset_dir, 'vocab%d.en' % self.en_vocabulary_size), self.train_path + '.en', self.en_vocabulary_size)
-		self.build_vocabulary(os.path.join(self.dataset_dir, 'vocab%d.fr' % self.fr_vocabulary_size), self.train_path + '.fr', self.fr_vocabulary_size)
+		self.build_vocabularies()
 
 	def gunzip_file(self, gz_path, new_path):
 		print('Unpacking %s to %s' % (gz_path, new_path))
@@ -66,32 +64,45 @@ class Dataset():
 
 		self.train_path = train_path
 
+	def build_vocabularies(self):
+		en_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.en' % self.en_vocabulary_size)
+		en_data_path = self.train_path + '.en'
+
+		if not gfile.Exists(en_vocabulary_path):
+			self.build_vocabulary(en_vocabulary_path, en_data_path, self.en_vocabulary_size)
+
+		fr_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.fr' % self.fr_vocabulary_size)
+		fr_data_path = self.train_path + '.fr'
+
+		if not gfile.Exists(fr_vocabulary_path):
+			self.build_vocabulary(fr_vocabulary_path, fr_data_path, self.fr_vocabulary_size)
+
+
 	def build_vocabulary(self, vocabulary_path, data_path, max_vocabulary_size):
-		if not gfile.Exists(vocabulary_path):
-			print('Creating vocabulary %s from data %s' % (vocabulary_path, data_path))
-			vocab = {}
-			with gfile.GFile(data_path, 'rb') as f:
-				counter = 0
-				for line in f:
-					counter += 1
-					if not counter % 100000:
-						print(' Processing line %d' % counter)
+		print('Creating vocabulary %s from data %s' % (vocabulary_path, data_path))
+		vocab = {}
+		with gfile.GFile(data_path, 'rb') as f:
+			counter = 0
+			for line in f:
+				counter += 1
+				if not counter % 100000:
+					print(' Processing line %d' % counter)
 
-					line = tf.compat.as_bytes(line)
-					tokens = self.basic_tokenizer(line)
+				line = tf.compat.as_bytes(line)
+				tokens = self.basic_tokenizer(line)
 
-					for w in tokens:
-						word = self._DIGIT_RE.sub(b'0', w)
-						if word in vocab:
-							vocab[word] += 1
-						else:
-							vocab[word] = 1
+				for w in tokens:
+					word = self._DIGIT_RE.sub(b'0', w)
+					if word in vocab:
+						vocab[word] += 1
+					else:
+						vocab[word] = 1
 
-				vocab_list = self._START_VOCAB + sorted(vocab, key=vocab.get, reverse=True)
+			vocab_list = self._START_VOCAB + sorted(vocab, key=vocab.get, reverse=True)
 
-				if len(vocab_list) > max_vocabulary_size:
-					vocab_list = vocab_list[:max_vocabulary_size]
+			if len(vocab_list) > max_vocabulary_size:
+				vocab_list = vocab_list[:max_vocabulary_size]
 
-				with gfile.GFile(vocabulary_path, 'wb') as vocab_file:
-					for w in vocab_list:
-						vocab_file.write(w + b'\n')
+			with gfile.GFile(vocabulary_path, 'wb') as vocab_file:
+				for w in vocab_list:
+					vocab_file.write(w + b'\n')
