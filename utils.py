@@ -89,8 +89,8 @@ class Dataset():
 
 				vocab_list = self._START_VOCAB + sorted(vocab, key=vocab.get, reverse=True)
 
-				if len(vocab_list) > self.max_vocabulary_size:
-					vocab_list = vocab_list[:self.max_vocabulary_size]
+				if len(vocab_list) > max_vocabulary_size:
+					vocab_list = vocab_list[:max_vocabulary_size]
 
 				with gfile.GFile(vocabulary_path, 'wb') as vocab_file:
 					for w in vocab_list:
