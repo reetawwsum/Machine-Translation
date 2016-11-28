@@ -45,3 +45,9 @@ def handle_large_vocabulary(num_samples, size, target_vocab_size):
 		softmax_loss_function = sampled_loss
 
 	return output_projection, softmax_loss_function
+
+def embedding_seq2seq_with_attention(cell, source_vocab_size, target_vocab_size, num_units, output_projection):
+	def seq2seq_f(encoder_inputs, decoder_inputs):
+		return tf.nn.seq2seq.embedding_attention_seq2seq(encoder_inputs, decoder_inputs, cell, num_encoder_symbols=source_vocab_size, num_decoder_symbols=target_vocab_size, embedding_size=num_units, output_projection=output_projection, dtype=tf.float32)
+
+	return seq2seq_f
