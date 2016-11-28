@@ -16,7 +16,16 @@ class Model():
 		self.learning_rate = config.learning_rate
 		self.en_vocabulary_size = config.en_vocabulary_size
 		self.fr_vocabulary_size = config.fr_vocabulary_size
+		self.num_samples = config.num_samples
 		self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+
+		# English to French translation
+		if config.target_vocab == 'fr':
+			self.source_vocab_size = config.en_vocabulary_size
+			self.target_vocab_size = config.fr_vocabulary_size
+		else:
+			self.source_vocab_size = config.fr_vocabulary_size
+			self.target_vocab_size = config.en_vocabulary_size
 
 		self.build_model()
 
@@ -47,6 +56,9 @@ class Model():
 			# Creating placeholder for target weights
 			self.target_weights = target_weight_placeholder(self.buckets[-1][1] + 1)
 
+			# Creating output projection and softmax loss function in order to handle large vocabulary
+			self.output_projection, self.softmax_loss_function = handle_large_vocabulary(self.num_samples, self.num_units, self.target_vocab_size)
+			
 
 	def train(self):
 		pass
