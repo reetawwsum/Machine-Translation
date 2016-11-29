@@ -54,7 +54,7 @@ class Model():
 			self.updates.append(opt.apply_gradients(zip(clipped_gradients, params), global_step=self.global_step))
 
 	def create_saver(self):
-		saver = tf.train.saver()
+		saver = tf.train.Saver()
 
 		self.saver = saver
 
