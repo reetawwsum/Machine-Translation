@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 import gzip
 import tarfile
 
@@ -12,10 +13,13 @@ class Dataset():
 	'''Load dataset'''
 	def __init__(self, config):
 		self.config = config
+		self.max_train_data_size = config.max_train_data_size
 		self.dataset_dir = config.dataset_dir
 		self.en_vocabulary_size = config.en_vocabulary_size
 		self.fr_vocabulary_size = config.fr_vocabulary_size
 		self.file_name = os.path.join(config.dataset_dir, config.dataset)
+
+		self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
 		_PAD = b'_PAD'
 		_GO = b'_GO'
@@ -34,9 +38,10 @@ class Dataset():
 		self.load_dataset()
 
 	def load_dataset(self):
-		self.load()
+		self.extract()
 		self.build_vocabularies()
 		self.convert_data_to_ids()
+		self.read_data()
 
 	def gunzip_file(self, gz_path, new_path):
 		print('Unpacking %s to %s' % (gz_path, new_path))
@@ -53,7 +58,7 @@ class Dataset():
 
 		return [w for w in words if w]
 
-	def load(self):
+	def extract(self):
 		train_path = os.path.join(self.dataset_dir, 'giga-fren.release2.fixed')
 
 		if not (gfile.Exists(train_path + '.fr') and gfile.Exists(train_path + '.en')):
@@ -154,3 +159,46 @@ class Dataset():
 					word_ids = self.sentence_to_ids(line, vocab)	
 
 					f.write(" ".join([str(word_id) for word_id in word_ids]) + '\n')
+
+	def read_data(self):
+		data = [[] for _ in self.buckets]
+
+		with tf.gfile.GFile(self.en_train_ids_path, 'r') as source_file:
+			with tf.gfile.GFile(self.fr_train_ids_path, 'r') as target_file:
+				source, target = source_file.readline(), target_file.readline()
+				counter = 0
+
+				while source and target and (not self.max_train_data_size or counter < self.max_train_data_size):
+					counter += 1
+
+					if not counter % 100000:
+						print(' reading data line %d' % counter)
+						sys.stdout.flush()
+
+					source_ids = [int(x) for x in source.split()]
+					target_ids = [int(x) for x in target.split()]
+
+					target_ids.append(self.EOS_ID)
+
+					for bucket_id, (source_size, target_size) in enumerate(self.buckets):
+						if len(source_ids) < source_size and len(target_ids) < target_size:
+							data[bucket_id].append([source_ids, target_ids])
+							break
+
+					source, target = source_file.readline(), target_file.readline()
+
+		self.data = data
+
+class BatchGenerator():
+	'''Generate Batches'''
+	def __init__(self, config):
+		self.config = config
+		self.batch_size = config.batch_size
+
+		self.load_dataset()
+
+	def load_dataset(self):
+		dataset = Dataset(self.config)
+
+	def next(self):
+		pass

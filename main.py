@@ -4,6 +4,7 @@ from model import *
 
 flags = tf.app.flags
 flags.DEFINE_integer('batch_size', 64, 'Size of training batch')
+flags.DEFINE_integer('max_train_data_size', 10, 'Limit on the size of training data (0: no limit)')
 flags.DEFINE_integer('num_units', 1024, 'Number of units in LSTM layer')
 flags.DEFINE_integer('num_hidden_layers', 3, 'Number of hidden LSTM layers')
 flags.DEFINE_float('learning_rate', 0.5, 'Initial learning rate')
