@@ -89,4 +89,7 @@ class Model():
 			self.create_saver()
 
 	def train(self):
-		pass
+		with tf.Session(graph=self.graph) as self.sess:
+			init = tf.initialize_all_variables()
+			self.sess.run(init)
+			print('Graph Initialised')
