@@ -85,5 +85,8 @@ class Model():
 			# Adding train op to the graph
 			self.train_op()
 
+			# Creating saver
+			self.create_saver()
+
 	def train(self):
 		pass
