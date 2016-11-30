@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import sys
@@ -184,17 +185,3 @@ class Dataset():
 					source, target = source_file.readline(), target_file.readline()
 
 		self.data = data
-
-class BatchGenerator():
-	'''Generate Batches'''
-	def __init__(self):
-		config = FLAGS
-		self.batch_size = config.batch_size
-
-		self.load_dataset()
-
-	def load_dataset(self):
-		dataset = Dataset()
-
-	def next(self):
-		pass

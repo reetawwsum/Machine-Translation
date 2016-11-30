@@ -1,11 +1,9 @@
 from __future__ import print_function
-
-import os
+from __future__ import absolute_import
 
 import tensorflow as tf
 
 from ops import *
-from utils import *
 from config import *
 
 class Model():

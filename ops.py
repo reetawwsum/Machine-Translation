@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import absolute_import
+
 import tensorflow as tf
 
 def encoder_decoder_input_placeholder(encoder_input_range, decoder_input_range):
