@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import os
-import re
 import sys
 import gzip
 import tarfile
@@ -9,31 +8,28 @@ import tarfile
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 
+from config import *
+
 class Dataset():
 	'''Load dataset'''
-	def __init__(self, config):
-		self.config = config
+	def __init__(self):
+		config = FLAGS
 		self.max_train_data_size = config.max_train_data_size
 		self.dataset_dir = config.dataset_dir
 		self.en_vocabulary_size = config.en_vocabulary_size
 		self.fr_vocabulary_size = config.fr_vocabulary_size
 		self.file_name = os.path.join(config.dataset_dir, config.dataset)
 
-		self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+		self.buckets = BUCKETS
 
-		_PAD = b'_PAD'
-		_GO = b'_GO'
-		_EOS = b'_EOS'
-		_UNK = b'_UNK'
+		self.PAD_ID = PAD_ID
+		self.GO_ID = GO_ID
+		self.EOS_ID = EOS_ID
+		self.UNK_ID = UNK_ID
 
-		self.PAD_ID = 0
-		self.GO_ID = 1
-		self.EOS_ID = 2
-		self.UNK_ID = 3
-
-		self._START_VOCAB = [_PAD, _GO, _EOS, _UNK]
-		self._WORD_SPLIT = re.compile(b'([.,!?"\':;)(])')
-		self._DIGIT_RE = re.compile(br'\d')
+		self._START_VOCAB = START_VOCAB
+		self._WORD_SPLIT = WORD_SPLIT
+		self._DIGIT_RE = DIGIT_RE
 
 		self.load_dataset()
 
@@ -191,14 +187,14 @@ class Dataset():
 
 class BatchGenerator():
 	'''Generate Batches'''
-	def __init__(self, config):
-		self.config = config
+	def __init__(self):
+		config = FLAGS
 		self.batch_size = config.batch_size
 
 		self.load_dataset()
 
 	def load_dataset(self):
-		dataset = Dataset(self.config)
+		dataset = Dataset()
 
 	def next(self):
 		pass

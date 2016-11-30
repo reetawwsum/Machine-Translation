@@ -1,15 +1,17 @@
 from __future__ import print_function
 
 import os
+
 import tensorflow as tf
 
 from ops import *
 from utils import *
+from config import *
 
 class Model():
 	'''Sequence to sequence translation model'''
-	def __init__(self, config):
-		self.config = config
+	def __init__(self):
+		config = FLAGS
 		self.batch_size = config.batch_size
 		self.num_units = config.num_units
 		self.num_hidden_layers = config.num_hidden_layers
@@ -17,7 +19,7 @@ class Model():
 		self.learning_rate_decay_factor = config.learning_rate_decay_factor
 		self.max_gradient_norm = config.max_gradient_norm
 		self.num_samples = config.num_samples
-		self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+		self.buckets = BUCKETS
 
 		# English to French translation
 		if config.target_vocab == 'fr':
