@@ -3,11 +3,11 @@ from __future__ import absolute_import
 
 import tensorflow as tf
 
-from config import *
+import config
 from model import Model
 
 def main(_):
-	if FLAGS.train:
+	if config.FLAGS.train:
 		model = Model()
 		model.train()
 

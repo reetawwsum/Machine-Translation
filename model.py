@@ -3,29 +3,28 @@ from __future__ import absolute_import
 
 import tensorflow as tf
 
-from ops import *
-from config import *
+import ops
+import config
 
 class Model():
 	'''Sequence to sequence translation model'''
 	def __init__(self):
-		config = FLAGS
-		self.batch_size = config.batch_size
-		self.num_units = config.num_units
-		self.num_hidden_layers = config.num_hidden_layers
-		self.learning_rate = config.learning_rate
-		self.learning_rate_decay_factor = config.learning_rate_decay_factor
-		self.max_gradient_norm = config.max_gradient_norm
-		self.num_samples = config.num_samples
-		self.buckets = BUCKETS
+		self.batch_size = config.FLAGS.batch_size
+		self.num_units = config.FLAGS.num_units
+		self.num_hidden_layers = config.FLAGS.num_hidden_layers
+		self.learning_rate = config.FLAGS.learning_rate
+		self.learning_rate_decay_factor = config.FLAGS.learning_rate_decay_factor
+		self.max_gradient_norm = config.FLAGS.max_gradient_norm
+		self.num_samples = config.FLAGS.num_samples
+		self.buckets = config.BUCKETS
 
 		# English to French translation
-		if config.target_vocab == 'fr':
-			self.source_vocab_size = config.en_vocabulary_size
-			self.target_vocab_size = config.fr_vocabulary_size
+		if config.FLAGS.target_vocab == 'fr':
+			self.source_vocab_size = config.FLAGS.en_vocabulary_size
+			self.target_vocab_size = config.FLAGS.fr_vocabulary_size
 		else:
-			self.source_vocab_size = config.fr_vocabulary_size
-			self.target_vocab_size = config.en_vocabulary_size
+			self.source_vocab_size = config.FLAGS.fr_vocabulary_size
+			self.target_vocab_size = config.FLAGS.en_vocabulary_size
 
 		self.build_model()
 
@@ -35,7 +34,7 @@ class Model():
 		cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * self.num_hidden_layers)
 
 		# Creating embedding seq2seq function with attention
-		seq2seq_f = embedding_seq2seq_with_attention(cell, self.source_vocab_size, self.target_vocab_size, self.num_units, self.output_projection)
+		seq2seq_f = ops.embedding_seq2seq_with_attention(cell, self.source_vocab_size, self.target_vocab_size, self.num_units, self.output_projection)
 
 		# Creating outputs and losses using model with buckets
 		self.outputs, self.losses = tf.nn.seq2seq.model_with_buckets(self.encoder_inputs, self.decoder_inputs, self.targets, self.target_weights, self.buckets, lambda x, y: seq2seq_f(x, y), self.softmax_loss_function)
@@ -63,16 +62,16 @@ class Model():
 
 		with self.graph.as_default():
 			# Creating placeholder for encoder and decoder inputs
-			self.encoder_inputs, self.decoder_inputs = encoder_decoder_input_placeholder(self.buckets[-1][0], self.buckets[-1][1] + 1)
+			self.encoder_inputs, self.decoder_inputs = ops.encoder_decoder_input_placeholder(self.buckets[-1][0], self.buckets[-1][1] + 1)
 
 			# Creating placeholder for targets
-			self.targets = target_placeholder(self.decoder_inputs)
+			self.targets = ops.target_placeholder(self.decoder_inputs)
 
 			# Creating placeholder for target weights
-			self.target_weights = target_weight_placeholder(self.buckets[-1][1] + 1)
+			self.target_weights = ops.target_weight_placeholder(self.buckets[-1][1] + 1)
 
 			# Creating output projection and softmax loss function in order to handle large vocabulary
-			self.output_projection, self.softmax_loss_function = handle_large_vocabulary(self.num_samples, self.num_units, self.target_vocab_size)
+			self.output_projection, self.softmax_loss_function = ops.handle_large_vocabulary(self.num_samples, self.num_units, self.target_vocab_size)
 
 			# Creating learning rate variable, learning rate decay op, and global step for train op
 			self.learning_rate_var = tf.Variable(float(self.learning_rate), trainable=False, dtype=tf.float32)

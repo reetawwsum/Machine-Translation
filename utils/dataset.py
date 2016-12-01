@@ -9,28 +9,27 @@ import tarfile
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 
-from config import *
+import config
 
 class Dataset():
 	'''Load dataset'''
 	def __init__(self):
-		config = FLAGS
-		self.max_train_data_size = config.max_train_data_size
-		self.dataset_dir = config.dataset_dir
-		self.en_vocabulary_size = config.en_vocabulary_size
-		self.fr_vocabulary_size = config.fr_vocabulary_size
-		self.file_name = os.path.join(config.dataset_dir, config.dataset)
+		self.max_train_data_size = config.FLAGS.max_train_data_size
+		self.dataset_dir = config.FLAGS.dataset_dir
+		self.en_vocabulary_size = config.FLAGS.en_vocabulary_size
+		self.fr_vocabulary_size = config.FLAGS.fr_vocabulary_size
+		self.file_name = os.path.join(config.FLAGS.dataset_dir, config.FLAGS.dataset)
 
-		self.buckets = BUCKETS
+		self.buckets = config.BUCKETS
 
-		self.PAD_ID = PAD_ID
-		self.GO_ID = GO_ID
-		self.EOS_ID = EOS_ID
-		self.UNK_ID = UNK_ID
+		self.PAD_ID = config.PAD_ID
+		self.GO_ID = config.GO_ID
+		self.EOS_ID = config.EOS_ID
+		self.UNK_ID = config.UNK_ID
 
-		self._START_VOCAB = START_VOCAB
-		self._WORD_SPLIT = WORD_SPLIT
-		self._DIGIT_RE = DIGIT_RE
+		self._START_VOCAB = config.START_VOCAB
+		self._WORD_SPLIT = config.WORD_SPLIT
+		self._DIGIT_RE = config.DIGIT_RE
 
 		self.load_dataset()
 
