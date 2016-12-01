@@ -39,21 +39,6 @@ class Dataset():
 		self.convert_data_to_ids()
 		self.read_data()
 
-	def gunzip_file(self, gz_path, new_path):
-		print('Unpacking %s to %s' % (gz_path, new_path))
-		with gzip.open(gz_path, 'rb') as gz_file:
-			with open(new_path, 'wb') as new_file:
-				for line in gz_file:
-					new_file.write(line)
-
-	def basic_tokenizer(self, sentence):
-		words = []
-
-		for space_separated_sentence in sentence.strip().split():
-			words.extend(self._WORD_SPLIT.split(space_separated_sentence))
-
-		return [w for w in words if w]
-
 	def extract(self):
 		train_path = os.path.join(self.dataset_dir, 'giga-fren.release2.fixed')
 
@@ -70,6 +55,13 @@ class Dataset():
 			self.gunzip_file(train_path + '.fr.gz', train_path + '.fr')
 
 		self.train_path = train_path
+
+	def gunzip_file(self, gz_path, new_path):
+		print('Unpacking %s to %s' % (gz_path, new_path))
+		with gzip.open(gz_path, 'rb') as gz_file:
+			with open(new_path, 'wb') as new_file:
+				for line in gz_file:
+					new_file.write(line)
 
 	def build_vocabularies(self):
 		self.en_vocabulary_path = en_vocabulary_path = os.path.join(self.dataset_dir, 'vocab%d.en' % self.en_vocabulary_size)
@@ -114,16 +106,13 @@ class Dataset():
 				for w in vocab_list:
 					vocab_file.write(w + b'\n')
 
-	def load_vocabulary(self, vocabulary_path):
-		vocab_list = []
+	def basic_tokenizer(self, sentence):
+		words = []
 
-		with gfile.GFile(vocabulary_path, 'rb') as f:
-			vocab_list.extend(f.readlines())
+		for space_separated_sentence in sentence.strip().split():
+			words.extend(self._WORD_SPLIT.split(space_separated_sentence))
 
-		vocab_list = [line.strip() for line in vocab_list]
-		vocab = dict([(x, y) for (y, x) in enumerate(vocab_list)])
-
-		return vocab
+		return [w for w in words if w]
 
 	def convert_data_to_ids(self):
 		self.en_train_ids_path = en_train_ids_path = self.train_path + ('.ids%d.en' % self.en_vocabulary_size)
@@ -135,11 +124,6 @@ class Dataset():
 
 		if not gfile.Exists(fr_train_ids_path):
 			self.data_to_ids(self.fr_data_path, fr_train_ids_path, self.fr_vocabulary_path)
-
-	def sentence_to_ids(self, line, vocab):
-		tokens = self.basic_tokenizer(line)
-
-		return [vocab.get(self._DIGIT_RE.sub(b'0', w), self.UNK_ID) for w in tokens]
 
 	def data_to_ids(self, data_path, target_path, vocabulary_path):
 		vocab = self.load_vocabulary(vocabulary_path)
@@ -155,6 +139,22 @@ class Dataset():
 					word_ids = self.sentence_to_ids(line, vocab)	
 
 					f.write(" ".join([str(word_id) for word_id in word_ids]) + '\n')
+
+	def load_vocabulary(self, vocabulary_path):
+		vocab_list = []
+
+		with gfile.GFile(vocabulary_path, 'rb') as f:
+			vocab_list.extend(f.readlines())
+
+		vocab_list = [line.strip() for line in vocab_list]
+		vocab = dict([(x, y) for (y, x) in enumerate(vocab_list)])
+
+		return vocab
+
+	def sentence_to_ids(self, line, vocab):
+		tokens = self.basic_tokenizer(line)
+
+		return [vocab.get(self._DIGIT_RE.sub(b'0', w), self.UNK_ID) for w in tokens]
 
 	def read_data(self):
 		data = [[] for _ in self.buckets]
