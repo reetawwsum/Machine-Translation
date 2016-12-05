@@ -113,7 +113,7 @@ class Model():
 				last_target = self.decoder_inputs[decoder_size].name
 				feed_dict[last_target] = np.zeros([self.batch_size], dtype=np.int32)
 
-				_, _, l = self.sess.run([self.updates[bucket_id], self.gradient_norms[bucket_id], self.losses[bucket_id]], feed_dict=feed_dict)
+				_, l = self.sess.run([self.updates[bucket_id], self.losses[bucket_id]], feed_dict=feed_dict)
 
 				if not current_step % self.checkpoint_step:
 					print('Loss at step %d: %f' % (current_step, l))
