@@ -74,9 +74,7 @@ class Model():
 			self.output_projection, self.softmax_loss_function = ops.handle_large_vocabulary(self.num_samples, self.num_units, self.target_vocab_size)
 
 			# Creating learning rate variable, learning rate decay op, and global step for train op
-			self.learning_rate_var = tf.Variable(float(self.learning_rate), trainable=False, dtype=tf.float32)
-			self.learning_rate_decay_op = self.learning_rate_var.assign(self.learning_rate_var * self.learning_rate_decay_factor)
-			self.global_step = tf.Variable(0, trainable=False)
+			self.learning_rate_var, self.learning_rate_decay_op, self.global_step = ops.get_more_hyperparameters(self.learning_rate, self.learning_rate_decay_factor)
 
 			# Builds the graph that computes inference and loss
 			self.inference_and_loss()

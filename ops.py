@@ -49,6 +49,13 @@ def handle_large_vocabulary(num_samples, size, target_vocab_size):
 
 	return output_projection, softmax_loss_function
 
+def get_more_hyperparameters(learning_rate, learning_rate_decay_factor):
+	learning_rate_var = tf.Variable(float(learning_rate), trainable=False, dtype=tf.float32)
+	learning_rate_decay_op = learning_rate_var.assign(learning_rate_var * learning_rate_decay_factor)
+	global_step = tf.Variable(0, trainable=False)
+
+	return learning_rate_var, learning_rate_decay_op, global_step
+
 def embedding_seq2seq_with_attention(cell, source_vocab_size, target_vocab_size, num_units, output_projection):
 	def seq2seq_f(encoder_inputs, decoder_inputs):
 		return tf.nn.seq2seq.embedding_attention_seq2seq(encoder_inputs, decoder_inputs, cell, num_encoder_symbols=source_vocab_size, num_decoder_symbols=target_vocab_size, embedding_size=num_units, output_projection=output_projection, dtype=tf.float32)
