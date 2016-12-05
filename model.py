@@ -1,10 +1,12 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import numpy as np
 import tensorflow as tf
 
 import ops
 import config
+from utils.batchGenerator import BatchGenerator
 
 class Model():
 	'''Sequence to sequence translation model'''
@@ -16,6 +18,7 @@ class Model():
 		self.learning_rate_decay_factor = config.FLAGS.learning_rate_decay_factor
 		self.max_gradient_norm = config.FLAGS.max_gradient_norm
 		self.num_samples = config.FLAGS.num_samples
+		self.checkpoint_step = config.FLAGS.checkpoint_step
 		self.buckets = config.BUCKETS
 
 		# English to French translation
@@ -90,3 +93,29 @@ class Model():
 			init = tf.initialize_all_variables()
 			self.sess.run(init)
 			print('Graph Initialised')
+
+			current_step = 0
+			train_batches = BatchGenerator()
+
+			while True:
+				encoder_inputs, decoder_inputs, target_weights, bucket_id = train_batches.next()
+
+				feed_dict = {}
+				encoder_size, decoder_size = self.buckets[bucket_id]
+
+				for l in xrange(encoder_size):
+					feed_dict[self.encoder_inputs[l].name] = encoder_inputs[l]
+
+				for l in xrange(decoder_size):
+					feed_dict[self.decoder_inputs[l].name] = decoder_inputs[l]
+					feed_dict[self.target_weights[l].name] = target_weights[l]
+
+				last_target = self.decoder_inputs[decoder_size].name
+				feed_dict[last_target] = np.zeros([self.batch_size], dtype=np.int32)
+
+				_, _, l = self.sess.run([self.updates[bucket_id], self.gradient_norms[bucket_id], self.losses[bucket_id]], feed_dict=feed_dict)
+
+				if not current_step % self.checkpoint_step:
+					print('Loss at step %d: %f' % (current_step, l))
+
+				current_step += 1
