@@ -19,6 +19,8 @@ class Model():
 		self.max_gradient_norm = config.FLAGS.max_gradient_norm
 		self.num_samples = config.FLAGS.num_samples
 		self.checkpoint_step = config.FLAGS.checkpoint_step
+		self.checkpoint_dir = config.FLAGS.checkpoint_dir
+		self.model_name = config.FLAGS.model_name
 		self.buckets = config.BUCKETS
 
 		# English to French translation
@@ -94,7 +96,9 @@ class Model():
 			self.sess.run(init)
 			print('Graph Initialised')
 
+			loss = 0.0
 			current_step = 0
+			previous_losses = []
 			train_batches = BatchGenerator()
 
 			while True:
@@ -115,7 +119,19 @@ class Model():
 
 				_, l = self.sess.run([self.updates[bucket_id], self.losses[bucket_id]], feed_dict=feed_dict)
 
-				if not current_step % self.checkpoint_step:
-					print('Loss at step %d: %f' % (current_step, l))
-
+				loss += l / self.checkpoint_step
 				current_step += 1
+
+				if not current_step % self.checkpoint_step:
+					print('Current learning rate: %.4f' % self.sess.run(self.learning_rate_var))
+					print(' Loss at step %d: %f' % (current_step, l))
+
+					if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
+						self.sess.run(self.learning_rate_decay_op)
+
+					previous_losses.append(loss)
+					self.save()
+					loss = 0.0
+
+	def save(self):
+		self.saver.save(self.sess, os.path.join(self.checkpoint_dir, self.model_name), global_step=self.sess.run(self.global_step))

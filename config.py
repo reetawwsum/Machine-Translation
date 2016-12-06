@@ -20,6 +20,7 @@ flags.DEFINE_string('target_vocab', 'fr', 'Target vocabulary (en/fr)')
 flags.DEFINE_integer('checkpoint_step', 200, 'Number of training steps per checkpoint')
 flags.DEFINE_boolean('train', True, 'True for training, False for validating')
 flags.DEFINE_string('dataset', 'training-giga-fren.tar', 'Name of the dataset file')
+flags.DEFINE_string('model_name', 'seq2seq', 'Name of the model')
 flags.DEFINE_string('dataset_dir', 'data', 'Directory name for the dataset')
 flags.DEFINE_string('checkpoint_dir', 'checkpoint', 'Directory name to save the checkpoint')
 FLAGS = flags.FLAGS
