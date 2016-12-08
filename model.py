@@ -118,14 +118,14 @@ class Model():
 				last_target = self.decoder_inputs[decoder_size].name
 				feed_dict[last_target] = np.zeros([self.batch_size], dtype=np.int32)
 
-				_, l = self.sess.run([self.updates[bucket_id], self.losses[bucket_id]], feed_dict=feed_dict)
+				_, step_loss = self.sess.run([self.updates[bucket_id], self.losses[bucket_id]], feed_dict=feed_dict)
 
-				loss += l / self.checkpoint_step
+				loss += step_loss / self.checkpoint_step
 				current_step += 1
 
 				if not current_step % self.checkpoint_step:
 					print('Current learning rate: %.4f' % self.sess.run(self.learning_rate_var))
-					print(' Loss at step %d: %f' % (current_step, l))
+					print(' Loss at step %d: %f' % (current_step, step_loss))
 
 					if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
 						self.sess.run(self.learning_rate_decay_op)
